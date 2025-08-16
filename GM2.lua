@@ -66,21 +66,30 @@ end
 -- =========================
 -- Funciones de godmode
 -- =========================
-local humanoidConnection -- Para desconectar evento al cambiar de personaje
+local currentHealthConnection
+local currentDiedConnection
+
+local function disconnectConnections()
+	if currentHealthConnection then
+		currentHealthConnection:Disconnect()
+		currentHealthConnection = nil
+	end
+	if currentDiedConnection then
+		currentDiedConnection:Disconnect()
+		currentDiedConnection = nil
+	end
+end
 
 local function protectCharacter(char)
+	disconnectConnections()
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
 	if humanoid then
-		if humanoidConnection then
-			humanoidConnection:Disconnect()
-		end
-		humanoidConnection = humanoid.HealthChanged:Connect(function(health)
+		currentHealthConnection = humanoid.HealthChanged:Connect(function(health)
 			if godmode and health < humanoid.MaxHealth then
 				humanoid.Health = humanoid.MaxHealth
 			end
 		end)
-		-- Previene muertes
-		humanoid.Died:Connect(function()
+		currentDiedConnection = humanoid.Died:Connect(function()
 			if godmode then
 				humanoid.Health = humanoid.MaxHealth
 			end
