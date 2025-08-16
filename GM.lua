@@ -1,15 +1,22 @@
--- 📌 GodmodeClient.lua
--- Toggle con tecla G + UI de estado
--- Debe ir en StarterPlayerScripts
+-- 📌 GodmodeLoader.lua
+-- Script todo-en-uno para activar Godmode con tecla G + UI
+-- Colócalo en StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionService = game:GetService("ContextActionService")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local toggleEvent = ReplicatedStorage:WaitForChild("GodmodeToggle")
-
 local godmode = false
+
+-- 🛠 Crear RemoteEvent si no existe
+local toggleEvent = ReplicatedStorage:FindFirstChild("GodmodeToggle")
+if not toggleEvent then
+    toggleEvent = Instance.new("RemoteEvent")
+    toggleEvent.Name = "GodmodeToggle"
+    toggleEvent.Parent = ReplicatedStorage
+end
 
 -- 🖼 GUI de estado
 local screenGui = Instance.new("ScreenGui")
@@ -60,3 +67,30 @@ end
 
 ContextActionService:BindAction("ToggleGodmode", toggle, false, Enum.KeyCode.G)
 updateUI()
+
+-- 🛡 Protección en tiempo real
+local function protectCharacter(character)
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    if not humanoid then return end
+
+    humanoid.HealthChanged:Connect(function(health)
+        if godmode and health < humanoid.MaxHealth then
+            humanoid.Health = humanoid.MaxHealth
+        end
+    end)
+
+    humanoid.Died:Connect(function()
+        if godmode then
+            task.defer(function()
+                humanoid.Health = humanoid.MaxHealth
+            end)
+        end
+    end)
+end
+
+-- 🔁 Aplicar protección al personaje actual y futuros
+if player.Character then
+    protectCharacter(player.Character)
+end
+
+player.CharacterAdded:Connect(protectCharacter)
