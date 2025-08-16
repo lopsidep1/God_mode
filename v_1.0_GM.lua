@@ -1,11 +1,10 @@
 -- 📌 GodmodeLoader.lua
--- Script todo-en-uno para activar Godmode con tecla G + UI
+-- Script todo-en-uno para Godmode con UI + protección reforzada
 -- Colócalo en StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionService = game:GetService("ContextActionService")
-local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local godmode = false
@@ -68,22 +67,29 @@ end
 ContextActionService:BindAction("ToggleGodmode", toggle, false, Enum.KeyCode.G)
 updateUI()
 
--- 🛡 Protección en tiempo real
+-- 🛡 Protección reforzada
 local function protectCharacter(character)
     local humanoid = character:WaitForChild("Humanoid", 5)
     if not humanoid then return end
 
-    humanoid.HealthChanged:Connect(function(health)
-        if godmode and health < humanoid.MaxHealth then
+    -- Interceptar daño antes de morir
+    humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+        if godmode and humanoid.Health < humanoid.MaxHealth then
             humanoid.Health = humanoid.MaxHealth
         end
     end)
 
+    -- Evitar muerte clonando personaje
     humanoid.Died:Connect(function()
         if godmode then
-            task.defer(function()
-                humanoid.Health = humanoid.MaxHealth
-            end)
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if root then
+                local clone = character:Clone()
+                clone.Parent = workspace
+                clone:SetPrimaryPartCFrame(root.CFrame)
+                player.Character = clone
+                character:Destroy()
+            end
         end
     end)
 end
