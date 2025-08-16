@@ -1,5 +1,5 @@
 -- 📌 UltraDebugGodmode.lua
--- Godmode + invisibilidad total + UI + toggle + respawn
+-- Godmode + invisibilidad total + UI + toggle + colisión con suelo
 -- Colócalo en StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -27,27 +27,34 @@ label.Font = Enum.Font.SourceSansBold
 label.TextSize = 18
 label.Text = "Godmode OFF"
 
--- 🔄 Actualizar UI
 local function updateUI()
     label.Text = godmode and "Godmode ON" or "Godmode OFF"
 end
 
--- 🧱 Invisibilidad total
+-- 🧱 Invisibilidad total ante NPCs (sin atravesar el piso)
 local function applyInvisibility()
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             part.Transparency = 1
-            part.CanCollide = false
             part.CanTouch = false
             part.CanQuery = false
+
+            -- Mantener colisión con el suelo
+            if part.Name == "HumanoidRootPart" or part.Position.Y <= character:GetPivot().Position.Y then
+                part.CanCollide = true
+            else
+                part.CanCollide = false
+            end
         end
     end
+
     if humanoid then
         humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
         humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
         humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
         humanoid.PlatformStand = true
     end
+
     player:SetAttribute("InvisibleToNPC", true)
 end
 
@@ -87,12 +94,14 @@ local function toggleGodmode(_, state)
     if state == Enum.UserInputState.Begin then
         godmode = not godmode
         updateUI()
+
         if godmode then
             applyInvisibility()
             applyGodmode()
         else
             humanoid.PlatformStand = false
             player:SetAttribute("InvisibleToNPC", false)
+
             for _, part in ipairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.Transparency = 0
@@ -114,6 +123,7 @@ player.CharacterAdded:Connect(function(char)
     character = char
     humanoid = char:WaitForChild("Humanoid")
     root = char:WaitForChild("HumanoidRootPart")
+
     if godmode then
         applyInvisibility()
         applyGodmode()
