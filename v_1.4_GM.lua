@@ -1,8 +1,9 @@
--- 📌 FreeFlight.lua (tecla G)
--- Vuelo libre con BodyVelocity + no-collide
+-- 📌 FlyThrough.lua
+-- Vuelo libre + colisión anulada total
 -- Colócalo en StarterPlayerScripts
 
 local Players = game:GetService("Players")
+local PhysicsService = game:GetService("PhysicsService")
 local UserInputService = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
 local RunService = game:GetService("RunService")
@@ -12,14 +13,20 @@ local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 
+-- 🛡 Crear grupo de colisión ignorado
+local groupName = "FlyGhost"
+pcall(function() PhysicsService:CreateCollisionGroup(groupName) end)
+PhysicsService:CollisionGroupSetCollidable(groupName, groupName, false)
+
+-- 🚀 Setup de vuelo
 local flying = false
 local velocity = Instance.new("BodyVelocity")
-velocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+velocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
 velocity.Velocity = Vector3.zero
 velocity.Name = "FlyVelocity"
 velocity.Parent = root
 
--- 🖼 UI de estado
+-- 🖼 UI
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "FlyStatus"
 gui.ResetOnSpawn = false
@@ -33,11 +40,12 @@ label.Font = Enum.Font.SourceSansBold
 label.TextSize = 18
 label.Text = "Fly OFF"
 
--- 🧱 Desactivar colisiones
-local function setNoCollide(state)
+-- 🔁 Aplicar no-collide y grupo
+local function applyGhostMode()
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
-            part.CanCollide = not state
+            part.CanCollide = false
+            PhysicsService:SetPartCollisionGroup(part, groupName)
         end
     end
 end
@@ -57,6 +65,7 @@ end
 -- 🚀 Loop de vuelo
 RunService.RenderStepped:Connect(function()
     if flying then
+        applyGhostMode()
         local cam = workspace.CurrentCamera
         local dir = getDirection()
         if dir.Magnitude > 0 then
@@ -73,10 +82,18 @@ local function toggleFly(_, state)
     if state == Enum.UserInputState.Begin then
         flying = not flying
         label.Text = flying and "Fly ON" or "Fly OFF"
-        setNoCollide(flying)
         humanoid.PlatformStand = flying
+        applyGhostMode()
     end
     return Enum.ContextActionResult.Sink
 end
 
 ContextActionService:BindAction("ToggleFly", toggleFly, false, Enum.KeyCode.G)
+
+-- 🔁 Reaplicar al respawn
+player.CharacterAdded:Connect(function(char)
+    character = char
+    root = char:WaitForChild("HumanoidRootPart")
+    humanoid = char:WaitForChild("Humanoid")
+    velocity.Parent = root
+end)
