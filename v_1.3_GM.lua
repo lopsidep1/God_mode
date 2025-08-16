@@ -1,4 +1,4 @@
--- 📌 FreeFlight.lua
+-- 📌 FreeFlight.lua (tecla G)
 -- Vuelo libre con BodyVelocity + no-collide
 -- Colócalo en StarterPlayerScripts
 
@@ -68,15 +68,15 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ⌨️ Toggle con F
+-- ⌨️ Toggle con G
 local function toggleFly(_, state)
     if state == Enum.UserInputState.Begin then
         flying = not flying
         label.Text = flying and "Fly ON" or "Fly OFF"
         setNoCollide(flying)
-        humanoid.PlatformStand = flying -- desactiva físicas del humanoid
+        humanoid.PlatformStand = flying
     end
     return Enum.ContextActionResult.Sink
 end
 
-ContextActionService:BindAction("ToggleFly", toggleFly, false, Enum.KeyCode.F)
+ContextActionService:BindAction("ToggleFly", toggleFly, false, Enum.KeyCode.G)
