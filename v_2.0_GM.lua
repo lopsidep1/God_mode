@@ -138,7 +138,7 @@ local function toggleGodmode(_, state)
     return Enum.ContextActionResult.Sink
 end
 
--- ⌨️ Toggle vuelo libre con E
+-- ⌨️ Toggle vuelo libre con R
 local function toggleFly(_, state)
     if state == Enum.UserInputState.Begin then
         flying = not flying
@@ -149,7 +149,7 @@ local function toggleFly(_, state)
 end
 
 ContextActionService:BindAction("ToggleUltraGodmode", toggleGodmode, false, Enum.KeyCode.G)
-ContextActionService:BindAction("ToggleUltraFly", toggleFly, false, Enum.KeyCode.E)
+ContextActionService:BindAction("ToggleUltraFly", toggleFly, false, Enum.KeyCode.R)
 updateUI()
 
 -- 🔁 Respawn compatible
