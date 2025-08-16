@@ -1,5 +1,5 @@
--- 📌 FlyThrough.lua
--- Vuelo libre + colisión anulada total
+-- 📌 UltraFlyDebug.lua
+-- Vuelo libre + colisión anulada total para testers
 -- Colócalo en StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -13,9 +13,25 @@ local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 
+-- 🔐 Activación por perfil
+local allowedUsers = {
+    ["lopsidep"] = true
+}
+if not allowedUsers[player.Name] then return end
+
 -- 🛡 Crear grupo de colisión ignorado
 local groupName = "FlyGhost"
-pcall(function() PhysicsService:CreateCollisionGroup(groupName) end)
+local existingGroups = PhysicsService:GetCollisionGroups()
+local groupExists = false
+for _, g in ipairs(existingGroups) do
+    if g.name == groupName then
+        groupExists = true
+        break
+    end
+end
+if not groupExists then
+    PhysicsService:CreateCollisionGroup(groupName)
+end
 PhysicsService:CollisionGroupSetCollidable(groupName, groupName, false)
 
 -- 🚀 Setup de vuelo
