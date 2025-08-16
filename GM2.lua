@@ -1,17 +1,18 @@
--- Godmode + Cuadro de estado (todo en un solo LocalScript)
--- Coloca este script en StarterPlayer > StarterPlayerScripts
-
+-- Godmode + Cuadro de estado (todo en uno)
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
--- Estado inicial
 local godmode = false
 
--- =========================
--- Crear GUI del cuadro de estado
--- =========================
+-- GUI
+pcall(function()
+    if game:GetService("CoreGui"):FindFirstChild("StatusBoxGui") then
+        game:GetService("CoreGui").StatusBoxGui:Destroy()
+    end
+end)
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "StatusBoxGui"
 screenGui.Parent = game:GetService("CoreGui")
@@ -20,7 +21,7 @@ local box = Instance.new("Frame")
 box.Name = "StatusBox"
 box.Size = UDim2.new(0, 60, 0, 60)
 box.Position = UDim2.new(0, 20, 0, 20)
-box.BackgroundColor3 = Color3.fromRGB(200, 40, 40) -- Rojo por defecto (apagado)
+box.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
 box.BorderSizePixel = 0
 box.Parent = screenGui
 
@@ -40,83 +41,73 @@ label.Font = Enum.Font.SourceSansBold
 label.TextSize = 16
 label.Parent = box
 
--- =========================
--- Funciones de notificación y estado
--- =========================
-local function notify(text)
-	pcall(function()
-		StarterGui:SetCore("SendNotification", {
-			Title = "Godmode",
-			Text = text,
-			Duration = 4
-		})
-	end)
-end
-
 local function updateStatusBox()
-	if godmode then
-		box.BackgroundColor3 = Color3.fromRGB(40, 200, 60) -- Verde
-		label.Text = "ACTIVO"
-	else
-		box.BackgroundColor3 = Color3.fromRGB(200, 40, 40) -- Rojo
-		label.Text = "APAGADO"
-	end
+    if godmode then
+        box.BackgroundColor3 = Color3.fromRGB(40, 200, 60)
+        label.Text = "ACTIVO"
+    else
+        box.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+        label.Text = "APAGADO"
+    end
 end
 
--- =========================
--- Funciones de godmode
--- =========================
+local function notify(text)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "Godmode",
+            Text = text,
+            Duration = 4
+        })
+    end)
+end
+
 local currentHealthConnection
 local currentDiedConnection
 
 local function disconnectConnections()
-	if currentHealthConnection then
-		currentHealthConnection:Disconnect()
-		currentHealthConnection = nil
-	end
-	if currentDiedConnection then
-		currentDiedConnection:Disconnect()
-		currentDiedConnection = nil
-	end
+    if currentHealthConnection then
+        currentHealthConnection:Disconnect()
+        currentHealthConnection = nil
+    end
+    if currentDiedConnection then
+        currentDiedConnection:Disconnect()
+        currentDiedConnection = nil
+    end
 end
 
 local function protectCharacter(char)
-	disconnectConnections()
-	local humanoid = char:FindFirstChildOfClass("Humanoid")
-	if humanoid then
-		currentHealthConnection = humanoid.HealthChanged:Connect(function(health)
-			if godmode and health < humanoid.MaxHealth then
-				humanoid.Health = humanoid.MaxHealth
-			end
-		end)
-		currentDiedConnection = humanoid.Died:Connect(function()
-			if godmode then
-				humanoid.Health = humanoid.MaxHealth
-			end
-		end)
-	end
+    disconnectConnections()
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        currentHealthConnection = humanoid.HealthChanged:Connect(function(health)
+            if godmode and health < humanoid.MaxHealth then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+        currentDiedConnection = humanoid.Died:Connect(function()
+            if godmode then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+    end
 end
 
-player.CharacterAdded:Connect(protectCharacter)
-if player.Character then
-	protectCharacter(player.Character)
+Players.LocalPlayer.CharacterAdded:Connect(protectCharacter)
+if Players.LocalPlayer.Character then
+    protectCharacter(Players.LocalPlayer.Character)
 end
 
--- =========================
--- Alternar godmode con la tecla G
--- =========================
 UserInputService.InputBegan:Connect(function(input, processed)
-	if not processed and input.KeyCode == Enum.KeyCode.G then
-		godmode = not godmode
-		updateStatusBox()
-		if godmode then
-			notify("Godmode ACTIVADO")
-		else
-			notify("Godmode DESACTIVADO")
-		end
-	end
+    if not processed and input.KeyCode == Enum.KeyCode.G then
+        godmode = not godmode
+        updateStatusBox()
+        if godmode then
+            notify("Godmode ACTIVADO")
+        else
+            notify("Godmode DESACTIVADO")
+        end
+    end
 end)
 
--- Estado inicial
 updateStatusBox()
 notify("Presiona G para activar/desactivar Godmode")
