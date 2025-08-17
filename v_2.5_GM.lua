@@ -1,14 +1,14 @@
--- Ultra⁺ Debug Suite v3 by lopsidep
--- Godmode reforzado, Invisibility, Vuelo, UI compacta, Respawn-safe, Protección total
+-- Ultra⁺ Debug Suite v4 by lopsidep
+-- Godmode, Invisibility, Vuelo, UI, Respawn-safe, Remote Interceptors, Clon Persistente
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
--- 🔧 Toggles
 local godmode, invisible, flying = false, false, false
 
 -- 🛡️ Protección reforzada
@@ -39,11 +39,6 @@ character.AncestryChanged:Connect(function(_, parent)
     end
 end)
 
--- 🧨 Anulación de BreakJoints externo
-pcall(function()
-    character.BreakJoints = function() end
-end)
-
 -- 🧬 Reemplazo automático del Humanoid
 RunService.Heartbeat:Connect(function()
     if godmode and (not humanoid or humanoid.Parent ~= character) then
@@ -53,6 +48,17 @@ RunService.Heartbeat:Connect(function()
         reinforceHumanoidProtection(humanoid)
     end
 end)
+
+-- 🧪 Interceptar RemoteEvents de daño
+for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+    if remote:IsA("RemoteEvent") or remote:IsA("BindableEvent") then
+        pcall(function()
+            remote.OnClientEvent:Connect(function(...)
+                if godmode then return end
+            end)
+        end)
+    end
+end
 
 -- 🧠 Inicial
 reinforceHumanoidProtection(humanoid)
