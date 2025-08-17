@@ -14,6 +14,7 @@ local root = character:WaitForChild("HumanoidRootPart")
 
 local godmode = false
 local flying = false
+
 local velocity = Instance.new("BodyVelocity")
 velocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
 velocity.Velocity = Vector3.zero
@@ -26,7 +27,7 @@ gui.Name = "UltraDebugHUD"
 gui.ResetOnSpawn = false
 
 local label = Instance.new("TextLabel", gui)
-label.Size = UDim2.new(0, 200, 0, 30)
+label.Size = UDim2.new(0, 220, 0, 30)
 label.Position = UDim2.new(0, 20, 0, 20)
 label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 label.TextColor3 = Color3.new(1, 1, 1)
@@ -41,7 +42,7 @@ local function updateUI()
     label.Text = mode ~= "" and ("Modo: " .. mode) or "Modo: Normal"
 end
 
--- 🧱 Invisibilidad total ante NPCs
+-- 🧱 Invisibilidad total ante NPCs (sin atravesar el piso)
 local function applyInvisibility()
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
