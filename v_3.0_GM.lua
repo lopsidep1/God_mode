@@ -1,5 +1,5 @@
--- Ultra⁺⁺⁺ Debug Core v6 by lopsidep
--- Godmode absoluto con notificación visual y blindaje total
+-- Ultra⁺⁺⁺⁺ Debug Core v7 by lopsidep
+-- Auditoría activa, reconstrucción automática, blindaje total, notificación visual
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -18,11 +18,17 @@ local godmode = false
 local function notify(text)
     pcall(function()
         StarterGui:SetCore("SendNotification", {
-            Title = "Ultra⁺⁺⁺ Debug",
+            Title = "Ultra⁺⁺⁺⁺ Debug",
             Text = text,
             Duration = 3
         })
     end)
+end
+
+-- 🧠 Auditoría de eventos sospechosos
+local function auditEvent(source, detail)
+    print("⚠️ Auditoría: " .. source .. " → " .. detail)
+    notify("⚠️ Intento de muerte detectado: " .. source)
 end
 
 -- 🛡️ Protección del Humanoid
@@ -30,12 +36,16 @@ local function reinforceHumanoidProtection(h)
     if h and h:IsA("Humanoid") then
         h.BreakJointsOnDeath = false
         h:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-        pcall(function() h.TakeDamage = function() end end)
+        pcall(function() h.TakeDamage = function() auditEvent("TakeDamage", "Interceptado") end end)
         h.Died:Connect(function()
-            if godmode then h.Health = h.MaxHealth end
+            if godmode then
+                auditEvent("Died", "Interceptado")
+                h.Health = h.MaxHealth
+            end
         end)
         h.AncestryChanged:Connect(function(_, parent)
             if godmode and not parent then
+                auditEvent("Humanoid AncestryChanged", "Reemplazado")
                 local clone = h:Clone()
                 clone.Parent = character
                 humanoid = clone
@@ -48,8 +58,12 @@ end
 local function applyGlobalProtections()
     pcall(function()
         StarterGui:SetCore("ResetButtonCallback", false)
-        character.BreakJoints = function() end
-        character.Destroy = function() end
+        character.BreakJoints = function()
+            auditEvent("BreakJoints", "Interceptado")
+        end
+        character.Destroy = function()
+            auditEvent("Destroy", "Interceptado")
+        end
     end)
 end
 
@@ -59,7 +73,10 @@ local function interceptRemotes()
         if remote:IsA("RemoteEvent") or remote:IsA("BindableEvent") then
             pcall(function()
                 remote.OnClientEvent:Connect(function(...)
-                    if godmode then return end
+                    if godmode then
+                        auditEvent(remote.Name, "RemoteEvent bloqueado")
+                        return
+                    end
                 end)
             end)
         end
@@ -69,6 +86,7 @@ end
 -- 🧱 Protección del Character
 character.AncestryChanged:Connect(function(_, parent)
     if godmode and not parent then
+        auditEvent("Character AncestryChanged", "Clonado")
         local clone = character:Clone()
         clone.Parent = Workspace
         player.Character = clone
@@ -79,6 +97,7 @@ end)
 RunService.Heartbeat:Connect(function()
     if godmode then
         if not humanoid or humanoid.Parent ~= character then
+            auditEvent("Humanoid desaparecido", "Recreado")
             local newHumanoid = Instance.new("Humanoid")
             newHumanoid.Parent = character
             humanoid = newHumanoid
@@ -87,6 +106,7 @@ RunService.Heartbeat:Connect(function()
 
         local root = character:FindFirstChild("HumanoidRootPart")
         if not root then
+            auditEvent("HumanoidRootPart perdido", "Recreado")
             local newRoot = Instance.new("Part")
             newRoot.Name = "HumanoidRootPart"
             newRoot.Size = Vector3.new(2, 2, 1)
@@ -95,6 +115,7 @@ RunService.Heartbeat:Connect(function()
             newRoot.Position = character:GetPivot().Position
             newRoot.Parent = character
         elseif root.Position.Y < -1000 then
+            auditEvent("Caída infinita", "Reposicionado")
             root.Position = Vector3.new(0, 10, 0)
         end
     end
@@ -104,9 +125,11 @@ end)
 RunService.Stepped:Connect(function()
     if godmode then
         if humanoid and humanoid.Health < humanoid.MaxHealth then
+            auditEvent("Health modificada", "Restaurada")
             humanoid.Health = humanoid.MaxHealth
         end
         if Workspace.Gravity ~= 196.2 then
+            auditEvent("Gravedad manipulada", "Restaurada")
             Workspace.Gravity = 196.2
         end
     end
