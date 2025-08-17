@@ -1,5 +1,5 @@
--- Ultra⁺⁺⁺⁺ Debug Core v8 by lopsidep
--- Godmode limpio, funcional, con GUI de estado y protección total
+-- Ultra⁺⁺⁺⁺ Debug Core FINAL by lopsidep
+-- Godmode funcional, GUI persistente, protección total
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -15,17 +15,19 @@ local humanoid = character:WaitForChild("Humanoid")
 local godmode = false
 
 -- 🖥️ GUI de estado
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "GodmodeStatusUI"
 screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local statusLabel = Instance.new("TextLabel", screenGui)
+local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(0, 200, 0, 30)
 statusLabel.Position = UDim2.new(0, 10, 0, 10)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextSize = 20
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = screenGui
 
 local function updateStatusLabel()
     if godmode then
@@ -92,9 +94,9 @@ player.CharacterAdded:Connect(function(char)
     end
 end)
 
--- 🧠 Activación por tecla G
-UserInputService.InputBegan:Connect(function(input, gp)
-    if gp then return end
+-- ⌨️ Activación por tecla G
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.G then
         godmode = not godmode
         updateStatusLabel()
