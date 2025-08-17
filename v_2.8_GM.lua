@@ -1,5 +1,5 @@
 -- Ultra⁺⁺ Debug Core by lopsidep
--- Godmode total, sin vuelo, sin invisibilidad, sin UI
+-- Godmode total con notificación visual, sin vuelo, sin invisibilidad, sin UI
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -72,6 +72,17 @@ local function applyGlobalProtections()
     end)
 end
 
+-- ✅ Notificación visual
+local function notify(text)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "Ultra⁺⁺ Debug",
+            Text = text,
+            Duration = 3
+        })
+    end)
+end
+
 -- ♻️ Respawn-safe
 player.CharacterAdded:Connect(function(char)
     character = char
@@ -91,6 +102,9 @@ UserInputService.InputBegan:Connect(function(input, gp)
             reinforceHumanoidProtection(humanoid)
             interceptRemotes()
             applyGlobalProtections()
+            notify("Godmode ACTIVADO ✅")
+        else
+            notify("Godmode DESACTIVADO ❌")
         end
     end
 end)
