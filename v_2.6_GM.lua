@@ -1,17 +1,18 @@
--- Ultra⁺ Debug Suite v4 by lopsidep
--- Godmode, Invisibility, Vuelo, UI, Respawn-safe, Remote Interceptors, Clon Persistente
+-- Ultra⁺⁺ Debug Suite v5 by lopsidep
+-- Protección total contra daño, destrucción, reemplazo, RemoteEvents, Bindables, reset, y más
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
 local godmode, invisible, flying = false, false, false
 
--- 🛡️ Protección reforzada
+-- 🛡️ Protección reforzada del Humanoid
 local function reinforceHumanoidProtection(h)
     if h and h:IsA("Humanoid") then
         h.BreakJointsOnDeath = false
@@ -49,16 +50,30 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 🧪 Interceptar RemoteEvents de daño
-for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-    if remote:IsA("RemoteEvent") or remote:IsA("BindableEvent") then
-        pcall(function()
-            remote.OnClientEvent:Connect(function(...)
-                if godmode then return end
+-- 🧪 Interceptar RemoteEvents y Bindables
+local function interceptRemotes()
+    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+        if remote:IsA("RemoteEvent") or remote:IsA("BindableEvent") then
+            pcall(function()
+                remote.OnClientEvent:Connect(function(...)
+                    if godmode then return end
+                end)
             end)
-        end)
+        end
     end
 end
+interceptRemotes()
+
+-- 🧯 Protección contra reset manual
+pcall(function()
+    StarterGui:SetCore("ResetButtonCallback", false)
+end)
+
+-- 🧨 Anulación de BreakJoints y Destroy
+pcall(function()
+    character.BreakJoints = function() end
+    character.Destroy = function() end
+end)
 
 -- 🧠 Inicial
 reinforceHumanoidProtection(humanoid)
