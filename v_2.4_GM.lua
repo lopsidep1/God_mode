@@ -1,5 +1,5 @@
--- Ultra⁺ Debug Suite v2 by lopsidep
--- Godmode, Invisibility, Flight, UI Tabs, Respawn-safe, Reversible
+-- Ultra⁺ Debug Suite v3 by lopsidep
+-- Godmode reforzado, Invisibility, Vuelo, UI compacta, Respawn-safe, Protección total
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -8,7 +8,7 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
--- 🔧 State toggles
+-- 🔧 Toggles
 local godmode, invisible, flying = false, false, false
 
 -- 🛡️ Protección reforzada
@@ -24,17 +24,44 @@ local function reinforceHumanoidProtection(h)
             if godmode and not parent then
                 local clone = h:Clone()
                 clone.Parent = character
+                humanoid = clone
             end
         end)
     end
 end
 
+-- 🧨 Protección contra destrucción del Character
+character.AncestryChanged:Connect(function(_, parent)
+    if godmode and not parent then
+        local clone = character:Clone()
+        clone.Parent = workspace
+        player.Character = clone
+    end
+end)
+
+-- 🧨 Anulación de BreakJoints externo
+pcall(function()
+    character.BreakJoints = function() end
+end)
+
+-- 🧬 Reemplazo automático del Humanoid
+RunService.Heartbeat:Connect(function()
+    if godmode and (not humanoid or humanoid.Parent ~= character) then
+        local newHumanoid = Instance.new("Humanoid")
+        newHumanoid.Parent = character
+        humanoid = newHumanoid
+        reinforceHumanoidProtection(humanoid)
+    end
+end)
+
+-- 🧠 Inicial
 reinforceHumanoidProtection(humanoid)
 
-RunService.Stepped:Connect(function()
-    if godmode and humanoid and humanoid.Health < humanoid.MaxHealth then
-        humanoid.Health = humanoid.MaxHealth
-    end
+-- ♻️ Respawn-safe
+player.CharacterAdded:Connect(function(char)
+    character = char
+    humanoid = char:WaitForChild("Humanoid")
+    reinforceHumanoidProtection(humanoid)
 end)
 
 -- 🕵️ Invisibility
@@ -104,9 +131,9 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
--- ♻️ Respawn-safe
-player.CharacterAdded:Connect(function(char)
-    character = char
-    humanoid = char:WaitForChild("Humanoid")
-    reinforceHumanoidProtection(humanoid)
+-- 🧠 Salud constante
+RunService.Stepped:Connect(function()
+    if godmode and humanoid and humanoid.Health < humanoid.MaxHealth then
+        humanoid.Health = humanoid.MaxHealth
+    end
 end)
