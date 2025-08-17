@@ -160,3 +160,47 @@ UserInputService.InputBegan:Connect(function(input, gp)
         end
     end
 end)
+
+-- 🖥️ Indicador visual de estado
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "GodmodeStatusUI"
+screenGui.ResetOnSpawn = false
+
+local statusLabel = Instance.new("TextLabel", screenGui)
+statusLabel.Size = UDim2.new(0, 200, 0, 30)
+statusLabel.Position = UDim2.new(0, 10, 0, 10)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.new(1, 1, 1)
+statusLabel.Font = Enum.Font.SourceSansBold
+statusLabel.TextSize = 20
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local function updateStatusLabel()
+    if godmode then
+        statusLabel.Text = "Godmode: ✅ ACTIVADO"
+        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        statusLabel.Text = "Godmode: ❌ DESACTIVADO"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end
+
+-- Actualizar al iniciar
+updateStatusLabel()
+
+-- ⌨️ Activar con G (modificado para actualizar GUI)
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.G then
+        godmode = not godmode
+        updateStatusLabel()
+        if godmode then
+            reinforceHumanoidProtection(humanoid)
+            interceptRemotes()
+            applyGlobalProtections()
+            notify("Godmode ACTIVADO ✅")
+        else
+            notify("Godmode DESACTIVADO ❌")
+        end
+    end
+end)
