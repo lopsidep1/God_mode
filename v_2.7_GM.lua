@@ -1,5 +1,5 @@
--- Ultra⁺⁺ Debug Suite v5 by lopsidep
--- Protección total contra daño, destrucción, reemplazo, RemoteEvents, Bindables, reset, y más
+-- Ultra⁺⁺ Debug Core by lopsidep
+-- Godmode total, sin vuelo, sin invisibilidad, sin UI
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -10,7 +10,7 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
-local godmode, invisible, flying = false, false, false
+local godmode = false
 
 -- 🛡️ Protección reforzada del Humanoid
 local function reinforceHumanoidProtection(h)
@@ -62,93 +62,36 @@ local function interceptRemotes()
         end
     end
 end
-interceptRemotes()
 
--- 🧯 Protección contra reset manual
-pcall(function()
-    StarterGui:SetCore("ResetButtonCallback", false)
-end)
-
--- 🧨 Anulación de BreakJoints y Destroy
-pcall(function()
-    character.BreakJoints = function() end
-    character.Destroy = function() end
-end)
-
--- 🧠 Inicial
-reinforceHumanoidProtection(humanoid)
+-- 🧯 Protección contra reset manual y destrucción
+local function applyGlobalProtections()
+    pcall(function()
+        StarterGui:SetCore("ResetButtonCallback", false)
+        character.BreakJoints = function() end
+        character.Destroy = function() end
+    end)
+end
 
 -- ♻️ Respawn-safe
 player.CharacterAdded:Connect(function(char)
     character = char
     humanoid = char:WaitForChild("Humanoid")
-    reinforceHumanoidProtection(humanoid)
+    if godmode then
+        reinforceHumanoidProtection(humanoid)
+        applyGlobalProtections()
+    end
 end)
 
--- 🕵️ Invisibility
-local function setInvisibility(state)
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-            part.Transparency = state and 1 or 0
-        end
-    end
-    invisible = state
-end
-
--- 🕊️ Vuelo libre
-local bv, bg = Instance.new("BodyVelocity"), Instance.new("BodyGyro")
-bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-bv.Velocity = Vector3.zero
-
-local function toggleFlight()
-    flying = not flying
-    if flying then
-        bv.Parent = character.HumanoidRootPart
-        bg.Parent = character.HumanoidRootPart
-    else
-        bv:Destroy()
-        bg:Destroy()
-    end
-end
-
--- 🖥️ UI compacta
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "UltraDebugUI"
-
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 200, 0, 120)
-frame.Position = UDim2.new(0, 10, 0, 10)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.BorderSizePixel = 0
-
-local function createButton(text, callback, yPos)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(1, -20, 0, 30)
-    btn.Position = UDim2.new(0, 10, 0, yPos)
-    btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.MouseButton1Click:Connect(callback)
-end
-
-createButton("Godmode", function()
-    godmode = not godmode
-end, 0)
-
-createButton("Invisibility", function()
-    setInvisibility(not invisible)
-end, 35)
-
-createButton("Toggle Flight (R)", function()
-    toggleFlight()
-end, 70)
-
--- ⌨️ Keybind
+-- ⌨️ Activar todo con G
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
-    if input.KeyCode == Enum.KeyCode.R then
-        toggleFlight()
+    if input.KeyCode == Enum.KeyCode.G then
+        godmode = not godmode
+        if godmode then
+            reinforceHumanoidProtection(humanoid)
+            interceptRemotes()
+            applyGlobalProtections()
+        end
     end
 end)
 
