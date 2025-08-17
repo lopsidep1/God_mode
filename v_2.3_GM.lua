@@ -1,9 +1,9 @@
--- Ultra⁺ Debug Suite by lopsidep
+-- Ultra⁺ Debug Suite v2 by lopsidep
 -- Godmode, Invisibility, Flight, UI Tabs, Respawn-safe, Reversible
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
@@ -11,29 +11,33 @@ local humanoid = character:WaitForChild("Humanoid")
 -- 🔧 State toggles
 local godmode, invisible, flying = false, false, false
 
--- 🛡️ Godmode: Reinforced
-humanoid.BreakJointsOnDeath = false
-humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-humanoid.Died:Connect(function()
-    if godmode then
-        humanoid.Health = humanoid.MaxHealth
+-- 🛡️ Protección reforzada
+local function reinforceHumanoidProtection(h)
+    if h and h:IsA("Humanoid") then
+        h.BreakJointsOnDeath = false
+        h:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        pcall(function() h.TakeDamage = function() end end)
+        h.Died:Connect(function()
+            if godmode then h.Health = h.MaxHealth end
+        end)
+        h.AncestryChanged:Connect(function(_, parent)
+            if godmode and not parent then
+                local clone = h:Clone()
+                clone.Parent = character
+            end
+        end)
     end
-end)
-humanoid.AncestryChanged:Connect(function(_, parent)
-    if godmode and not parent then
-        local clone = humanoid:Clone()
-        clone.Parent = character
-    end
-end)
-humanoid.TakeDamage = function() end
+end
+
+reinforceHumanoidProtection(humanoid)
 
 RunService.Stepped:Connect(function()
-    if godmode then
+    if godmode and humanoid and humanoid.Health < humanoid.MaxHealth then
         humanoid.Health = humanoid.MaxHealth
     end
 end)
 
--- 🕵️ Invisibility: Hide from NPCs
+-- 🕵️ Invisibility
 local function setInvisibility(state)
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
@@ -43,7 +47,7 @@ local function setInvisibility(state)
     invisible = state
 end
 
--- 🕊️ Flight: Toggle with R
+-- 🕊️ Vuelo libre
 local bv, bg = Instance.new("BodyVelocity"), Instance.new("BodyGyro")
 bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
 bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
@@ -60,7 +64,7 @@ local function toggleFlight()
     end
 end
 
--- 🖥️ UI: Tabs, compact, ergonomic
+-- 🖥️ UI compacta
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "UltraDebugUI"
 
@@ -92,19 +96,17 @@ createButton("Toggle Flight (R)", function()
     toggleFlight()
 end, 70)
 
--- ⌨️ Keybind for flight
-game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
+-- ⌨️ Keybind
+UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.R then
         toggleFlight()
     end
 end)
 
--- ♻️ Respawn compatibility
+-- ♻️ Respawn-safe
 player.CharacterAdded:Connect(function(char)
     character = char
     humanoid = char:WaitForChild("Humanoid")
-    humanoid.BreakJointsOnDeath = false
-    humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-    humanoid.TakeDamage = function() end
+    reinforceHumanoidProtection(humanoid)
 end)
